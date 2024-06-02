@@ -105,11 +105,6 @@ export class UsersService {
     const groupIsEmpty = await this.groupsService.isGroupEmpty(groupId);
     if (groupIsEmpty) {
       await this.groupsService.updateGroupStatus(groupId, GroupStatus.EMPTY);
-    } else {
-      await this.groupsService.updateGroupStatus(
-        groupId,
-        GroupStatus.NOT_EMPTY,
-      );
     }
   }
 }
