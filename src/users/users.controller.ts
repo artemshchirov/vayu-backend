@@ -18,6 +18,8 @@ import { User } from '@prisma/client';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { QueryUserDto } from './dto/query-user.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { UpdateUsersStatusesDto } from './dto/update-user-statuses.dto';
+import { UserEntity } from './entities/user.entity';
 
 @ApiTags('Users')
 @Controller({
@@ -37,7 +39,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async findAllWithPagination(
     @Query() query: QueryUserDto,
-  ): Promise<InfinityPaginationResultType<User>> {
+  ): Promise<InfinityPaginationResultType<UserEntity>> {
     console.log('query', query);
 
     const page = query?.page ?? 1;
@@ -61,6 +63,14 @@ export class UsersController {
       }),
       { page, limit },
     );
+  }
+
+  @Post('update-statuses')
+  @HttpCode(HttpStatus.OK)
+  async updateStatuses(
+    @Body() updateUsersStatusesDto: UpdateUsersStatusesDto,
+  ): Promise<void> {
+    await this.usersService.updateStatuses(updateUsersStatusesDto);
   }
 
   @Get('all')

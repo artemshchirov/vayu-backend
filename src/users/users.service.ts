@@ -5,6 +5,7 @@ import { Prisma, User } from '@prisma/client';
 import { UsersRepository } from './users.repository';
 import { UserEntity } from './entities/user.entity';
 import { QueryUserDto } from './dto/query-user.dto';
+import { UpdateUsersStatusesDto } from './dto/update-user-statuses.dto';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,11 @@ export class UsersService {
     });
   }
 
+  async findAll(): Promise<UserEntity[]> {
+    const users = await this.usersRepository.findAll();
+    return users.map((user) => new UserEntity(user));
+  }
+
   async findManyWithPagination({
     filterOptions,
     paginationOptions,
@@ -29,7 +35,7 @@ export class UsersService {
       email: QueryUserDto['email'];
     } | null;
     paginationOptions: { page: number; limit: number };
-  }): Promise<User[]> {
+  }): Promise<UserEntity[]> {
     const where: Prisma.UserWhereInput = {};
 
     if (filterOptions?.name) {
@@ -43,19 +49,19 @@ export class UsersService {
     const page = Number(paginationOptions.page);
     const limit = Number(paginationOptions.limit);
 
-    console.log('filterOptions', filterOptions);
-    console.log('where', where);
-
-    return this.usersRepository.findMany({
+    const users = await this.usersRepository.findMany({
       skip: (page - 1) * limit,
       take: limit,
       where,
     });
+    return users.map((user) => new UserEntity(user));
   }
 
-  async findAll(): Promise<UserEntity[]> {
-    const users = await this.usersRepository.findAll();
-    return users.map((user) => new UserEntity(user));
+  async updateStatuses(
+    updateUsersStatusesDto: UpdateUsersStatusesDto,
+  ): Promise<void> {
+    const { updates } = updateUsersStatusesDto;
+    await this.usersRepository.updateStatuses(updates);
   }
 
   findOne(id: number) {

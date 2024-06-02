@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'nestjs-prisma';
+import { UpdateUsersStatusesDto } from './dto/update-user-statuses.dto';
 
 @Injectable()
 export class UsersRepository {
@@ -9,10 +10,14 @@ export class UsersRepository {
   async createUser(userData: Prisma.UserCreateInput): Promise<User> {
     return this.prisma.user.create({
       data: userData,
-      // NOTE: Uncomment for including the status relation and not just the statusId in the response
-      // include: {
-      //   status: true,
-      // },
+    });
+  }
+
+  async findAll(): Promise<User[]> {
+    return this.prisma.user.findMany({
+      include: {
+        status: true,
+      },
     });
   }
 
@@ -32,11 +37,65 @@ export class UsersRepository {
     });
   }
 
-  async findAll(): Promise<User[]> {
-    return this.prisma.user.findMany({
-      include: {
-        status: true,
-      },
-    });
+  async updateStatuses(
+    updates: UpdateUsersStatusesDto['updates'],
+  ): Promise<void> {
+    const batchSize = 100;
+    const retryLimit = 3;
+
+    const processBatch = async (batch: typeof updates, batchIndex: number) => {
+      try {
+        await this.prisma.$transaction(async (prisma) => {
+          const updatePromises = batch.map((update) =>
+            prisma.user.update({
+              where: { id: update.userId },
+              data: { statusId: update.statusId },
+            }),
+          );
+          await Promise.all(updatePromises);
+        });
+        return { index: batchIndex, success: true };
+      } catch (error) {
+        console.error(`Failed to update batch ${batchIndex}:`, error);
+        return { index: batchIndex, success: false, error };
+      }
+    };
+
+    const handleBatches = async (batchIndexes: number[]) => {
+      const results = [];
+      let retryCount = 0;
+
+      while (batchIndexes.length > 0 && retryCount < retryLimit) {
+        const currentIndexes = [...batchIndexes];
+        batchIndexes.length = 0;
+
+        for (const index of currentIndexes) {
+          const start = index * batchSize;
+          const batch = updates.slice(start, start + batchSize);
+          const result = await processBatch(batch, index);
+          results.push(result);
+
+          if (!result.success) {
+            batchIndexes.push(index);
+          }
+        }
+
+        retryCount++;
+      }
+
+      return results.filter((r) => !r.success);
+    };
+
+    const totalBatches = Math.ceil(updates.length / batchSize);
+    const batchIndexes = [...Array(totalBatches).keys()];
+    const failedBatches = await handleBatches(batchIndexes);
+
+    if (failedBatches.length > 0) {
+      console.error(
+        `Some batches still failed after ${retryLimit} retry:`,
+        failedBatches,
+      );
+      throw new Error('Failed to update some user statuses after retries');
+    }
   }
 }

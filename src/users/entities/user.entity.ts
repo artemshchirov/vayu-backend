@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Status, StatusName } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { StatusEntity } from '../../statuses/entities/status.entity';
+import { IsEmail } from 'class-validator';
 
 export class UserEntity {
   constructor(partial: Partial<UserEntity>) {
@@ -15,6 +16,7 @@ export class UserEntity {
   name: string;
 
   @ApiProperty({ example: 'alice@example.com' })
+  @IsEmail()
   email: string;
 
   @ApiProperty({ example: StatusName.ACTIVE, enum: StatusName })

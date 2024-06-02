@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class QueryUserDto {
   @ApiPropertyOptional({
@@ -33,6 +33,6 @@ export class QueryUserDto {
     example: 'dor@example.com',
   })
   @IsOptional()
-  @IsString()
+  @IsEmail()
   email?: string;
 }
