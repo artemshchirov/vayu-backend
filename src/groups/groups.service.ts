@@ -13,9 +13,6 @@ export class GroupsService {
   }
 
   async isGroupEmpty(groupId: Group['id']): Promise<boolean> {
-    if (!groupId) {
-      throw new BadRequestException('Group ID must not be null or undefined');
-    }
     const userCount = await this.groupsRepository.countGroupUsers(groupId);
     return userCount === 0;
   }

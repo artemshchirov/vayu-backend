@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Group, GroupStatus, Prisma, User } from '@prisma/client';
 import { UsersRepository } from './users.repository';
@@ -96,6 +96,10 @@ export class UsersService {
 
   async removeUserFromGroup(userId: User['id']): Promise<void> {
     const groupId = await this.usersRepository.getUserGroupId(userId);
+    if (!groupId) {
+      throw new BadRequestException('Group ID must not be null or undefined');
+    }
+
     await this.usersRepository.removeUserFromGroup(userId);
 
     const groupIsEmpty = await this.groupsService.isGroupEmpty(groupId);
