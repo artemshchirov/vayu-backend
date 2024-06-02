@@ -15,7 +15,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { InfinityPaginationResultType } from '../utils/types/infinity-pagination-result.type';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { QueryUserDto } from './dto/query-user.dto';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateUsersStatusesDto } from './dto/update-user-statuses.dto';
 import { UserEntity } from './entities/user.entity';
 import { Group, User } from '@prisma/client';
@@ -30,17 +30,25 @@ export class UsersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a new user' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'The user has been successfully created.',
+  })
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get all users with pagination' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'All users with pagination',
+  })
   async findAllWithPagination(
     @Query() query: QueryUserDto,
   ): Promise<InfinityPaginationResultType<UserEntity>> {
-    console.log('query', query);
-
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
     if (limit > 50) {
@@ -66,6 +74,11 @@ export class UsersController {
 
   @Post('update-statuses')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update statuses of multiple users' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Statuses of multiple users updated',
+  })
   async updateStatuses(
     @Body() updateUsersStatusesDto: UpdateUsersStatusesDto,
   ): Promise<void> {
@@ -74,12 +87,22 @@ export class UsersController {
 
   @Get('all')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Get all users',
+  })
   findAll() {
     return this.usersService.findAll();
   }
 
   @Patch(':userId/add-to-group/:groupId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Add user to group' })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'User added to group',
+  })
   @ApiParam({ name: 'userId', type: 'number', description: 'ID of the user' })
   @ApiParam({ name: 'groupId', type: 'number', description: 'ID of the group' })
   addUserToGroup(
@@ -91,6 +114,11 @@ export class UsersController {
 
   @Delete('remove-from-group/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove user from group' })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'User removed from group',
+  })
   @ApiParam({ name: 'id', type: 'number', description: 'ID of the user' })
   async removeUserFromGroup(@Param('id') id: User['id']): Promise<void> {
     return this.usersService.removeUserFromGroup(+id);
