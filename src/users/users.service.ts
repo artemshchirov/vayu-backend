@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Group, Prisma, User } from '@prisma/client';
+import { Group, GroupStatus, Prisma, User } from '@prisma/client';
 import { UsersRepository } from './users.repository';
 import { UserEntity } from './entities/user.entity';
 import { QueryUserDto } from './dto/query-user.dto';
@@ -71,21 +71,41 @@ export class UsersService {
     userId: User['id'],
     groupId: Group['id'],
   ): Promise<void> {
+    const oldGroupId = await this.usersRepository.getUserGroupId(userId);
     const groupWasEmpty = await this.groupsService.isGroupEmpty(groupId);
     await this.usersRepository.addUserToGroup(userId, groupId);
     if (groupWasEmpty) {
-      await this.groupsService.updateGroupStatus(groupId, 'NOT_EMPTY');
+      await this.groupsService.updateGroupStatus(
+        groupId,
+        GroupStatus.NOT_EMPTY,
+      );
+    }
+
+    if (oldGroupId) {
+      await this.updateOldGroupStatus(oldGroupId);
+    }
+  }
+
+  private async updateOldGroupStatus(groupId: Group['id']): Promise<void> {
+    const oldGroupIsEmpty = await this.groupsService.isGroupEmpty(groupId);
+
+    if (oldGroupIsEmpty) {
+      await this.groupsService.updateGroupStatus(groupId, GroupStatus.EMPTY);
     }
   }
 
   async removeUserFromGroup(userId: User['id']): Promise<void> {
     const groupId = await this.usersRepository.getUserGroupId(userId);
     await this.usersRepository.removeUserFromGroup(userId);
+
     const groupIsEmpty = await this.groupsService.isGroupEmpty(groupId);
     if (groupIsEmpty) {
-      await this.groupsService.updateGroupStatus(groupId, 'EMPTY');
+      await this.groupsService.updateGroupStatus(groupId, GroupStatus.EMPTY);
     } else {
-      await this.groupsService.updateGroupStatus(groupId, 'NOT_EMPTY');
+      await this.groupsService.updateGroupStatus(
+        groupId,
+        GroupStatus.NOT_EMPTY,
+      );
     }
   }
 }
