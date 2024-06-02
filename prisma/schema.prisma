@@ -14,20 +14,24 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String @unique
-  status   Status @relation(fields: [statusId], references: [id])
-  statusId Int
-  group    Group? @relation(fields: [groupId], references: [id])
-  groupId  Int?
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  status    Status   @relation(fields: [statusId], references: [id])
+  statusId  Int
+  group     Group?   @relation(fields: [groupId], references: [id])
+  groupId   Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Group {
-  id     Int         @id @default(autoincrement())
-  name   String      @unique
-  status GroupStatus
-  users  User[]
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  status    GroupStatus
+  users     User[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model Status {
@@ -37,8 +41,8 @@ model Status {
 }
 
 enum StatusName {
-  PENDING
   ACTIVE
+  PENDING
   BLOCKED
 }
 
