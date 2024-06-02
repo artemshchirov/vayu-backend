@@ -17,8 +17,8 @@ export class GroupsRepository {
   }
 
   async updateGroupStatus(
-    groupId: number,
-    status: 'EMPTY' | 'NOT_EMPTY',
+    groupId: Group['id'],
+    status: Group['status'],
   ): Promise<void> {
     await this.prisma.group.update({
       where: { id: groupId },
@@ -26,7 +26,7 @@ export class GroupsRepository {
     });
   }
 
-  async countGroupUsers(groupId: number): Promise<number> {
+  async countGroupUsers(groupId: Group['id']): Promise<number> {
     const result = await this.prisma.group.findUnique({
       where: { id: groupId },
       select: {

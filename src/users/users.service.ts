@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Prisma, User } from '@prisma/client';
+import { Group, Prisma, User } from '@prisma/client';
 import { UsersRepository } from './users.repository';
 import { UserEntity } from './entities/user.entity';
 import { QueryUserDto } from './dto/query-user.dto';
@@ -67,7 +67,10 @@ export class UsersService {
     await this.usersRepository.updateStatuses(updates);
   }
 
-  async addUserToGroup(userId: number, groupId: number): Promise<void> {
+  async addUserToGroup(
+    userId: User['id'],
+    groupId: Group['id'],
+  ): Promise<void> {
     const groupWasEmpty = await this.groupsService.isGroupEmpty(groupId);
     await this.usersRepository.addUserToGroup(userId, groupId);
     if (groupWasEmpty) {
@@ -75,7 +78,7 @@ export class UsersService {
     }
   }
 
-  async removeUserFromGroup(userId: number): Promise<void> {
+  async removeUserFromGroup(userId: User['id']): Promise<void> {
     const groupId = await this.usersRepository.getUserGroupId(userId);
     await this.usersRepository.removeUserFromGroup(userId);
     const groupIsEmpty = await this.groupsService.isGroupEmpty(groupId);

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { GroupsRepository } from './groups.repository';
 import { GroupEntity } from './entities/group.entity';
+import { Group } from '@prisma/client';
 
 @Injectable()
 export class GroupsService {
@@ -11,14 +12,14 @@ export class GroupsService {
     return this.groupsRepository.createGroup(createGroupDto);
   }
 
-  async isGroupEmpty(groupId: number): Promise<boolean> {
+  async isGroupEmpty(groupId: Group['id']): Promise<boolean> {
     const userCount = await this.groupsRepository.countGroupUsers(groupId);
     return userCount === 0;
   }
 
   async updateGroupStatus(
-    groupId: number,
-    status: 'EMPTY' | 'NOT_EMPTY',
+    groupId: Group['id'],
+    status: Group['status'],
   ): Promise<void> {
     await this.groupsRepository.updateGroupStatus(groupId, status);
   }
