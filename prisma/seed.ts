@@ -4,8 +4,8 @@ const prisma = new PrismaClient();
 
 async function seedStatuses() {
   const statuses = [
-    { id: 1, name: StatusName.PENDING },
-    { id: 2, name: StatusName.ACTIVE },
+    { id: 1, name: StatusName.ACTIVE },
+    { id: 2, name: StatusName.PENDING },
     { id: 3, name: StatusName.BLOCKED },
   ];
 

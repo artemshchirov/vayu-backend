@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { StatusName } from '@prisma/client';
+import { Status, StatusName } from '@prisma/client';
+import { Type } from 'class-transformer';
+import { StatusEntity } from '../../statuses/entities/status.entity';
 
 export class UserEntity {
   constructor(partial: Partial<UserEntity>) {
@@ -17,6 +19,10 @@ export class UserEntity {
 
   @ApiProperty({ example: StatusName.ACTIVE, enum: StatusName })
   statusId: number;
+
+  @ApiProperty({ example: StatusName.ACTIVE, enum: StatusName })
+  @Type(() => StatusEntity)
+  status: Status;
 
   @ApiPropertyOptional({ example: 1, nullable: true })
   groupId?: number | null;

@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "StatusName" AS ENUM ('PENDING', 'ACTIVE', 'BLOCKED');
+CREATE TYPE "StatusName" AS ENUM ('ACTIVE', 'PENDING', 'BLOCKED');
 
 -- CreateEnum
 CREATE TYPE "GroupStatus" AS ENUM ('EMPTY', 'NOT_EMPTY');
@@ -11,6 +11,8 @@ CREATE TABLE "User" (
     "email" TEXT NOT NULL,
     "statusId" INTEGER NOT NULL,
     "groupId" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -20,6 +22,8 @@ CREATE TABLE "Group" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "status" "GroupStatus" NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Group_pkey" PRIMARY KEY ("id")
 );

@@ -6,21 +6,65 @@ import {
   Patch,
   Param,
   Delete,
+  HttpCode,
+  HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InfinityPaginationResultType } from '../utils/types/infinity-pagination-result.type';
+import { User } from '@prisma/client';
+import { infinityPagination } from '../utils/infinity-pagination';
+import { QueryUserDto } from './dto/query-user.dto';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller('users')
+@ApiTags('Users')
+@Controller({
+  path: 'users',
+  version: '1',
+})
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+    return this.usersService.createUser(createUserDto);
   }
 
   @Get()
+  @HttpCode(HttpStatus.OK)
+  async findAllWithPagination(
+    @Query() query: QueryUserDto,
+  ): Promise<InfinityPaginationResultType<User>> {
+    console.log('query', query);
+
+    const page = query?.page ?? 1;
+    let limit = query?.limit ?? 10;
+    if (limit > 50) {
+      limit = 50;
+    }
+
+    const filterOptions = {
+      name: query.name,
+      email: query.email,
+    };
+
+    return infinityPagination(
+      await this.usersService.findManyWithPagination({
+        filterOptions,
+        paginationOptions: {
+          page,
+          limit,
+        },
+      }),
+      { page, limit },
+    );
+  }
+
+  @Get('all')
+  @HttpCode(HttpStatus.OK)
   findAll() {
     return this.usersService.findAll();
   }
