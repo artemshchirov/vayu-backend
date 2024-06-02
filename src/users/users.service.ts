@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { Prisma, User } from '@prisma/client';
 import { UsersRepository } from './users.repository';
 import { UserEntity } from './entities/user.entity';
 import { QueryUserDto } from './dto/query-user.dto';
 import { UpdateUsersStatusesDto } from './dto/update-user-statuses.dto';
+import { GroupsService } from '../groups/groups.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly groupsService: GroupsService,
+  ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     return this.usersRepository.createUser({
@@ -64,15 +67,22 @@ export class UsersService {
     await this.usersRepository.updateStatuses(updates);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async addUserToGroup(userId: number, groupId: number): Promise<void> {
+    const groupWasEmpty = await this.groupsService.isGroupEmpty(groupId);
+    await this.usersRepository.addUserToGroup(userId, groupId);
+    if (groupWasEmpty) {
+      await this.groupsService.updateGroupStatus(groupId, 'NOT_EMPTY');
+    }
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async removeUserFromGroup(userId: number): Promise<void> {
+    const groupId = await this.usersRepository.getUserGroupId(userId);
+    await this.usersRepository.removeUserFromGroup(userId);
+    const groupIsEmpty = await this.groupsService.isGroupEmpty(groupId);
+    if (groupIsEmpty) {
+      await this.groupsService.updateGroupStatus(groupId, 'EMPTY');
+    } else {
+      await this.groupsService.updateGroupStatus(groupId, 'NOT_EMPTY');
+    }
   }
 }

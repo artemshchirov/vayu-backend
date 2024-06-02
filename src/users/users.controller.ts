@@ -12,14 +12,13 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InfinityPaginationResultType } from '../utils/types/infinity-pagination-result.type';
-import { User } from '@prisma/client';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { QueryUserDto } from './dto/query-user.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
 import { UpdateUsersStatusesDto } from './dto/update-user-statuses.dto';
 import { UserEntity } from './entities/user.entity';
+import { Group, User } from '@prisma/client';
 
 @ApiTags('Users')
 @Controller({
@@ -79,18 +78,21 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  @Patch(':userId/add-to-group/:groupId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'userId', type: 'number', description: 'ID of the user' })
+  @ApiParam({ name: 'groupId', type: 'number', description: 'ID of the group' })
+  addUserToGroup(
+    @Param('userId') userId: User['id'],
+    @Param('groupId') groupId: Group['id'],
+  ): Promise<void> {
+    return this.usersService.addUserToGroup(+userId, +groupId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @Delete('remove-from-group/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'id', type: 'number', description: 'ID of the user' })
+  async removeUserFromGroup(@Param('id') id: User['id']): Promise<void> {
+    return this.usersService.removeUserFromGroup(+id);
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
+import { Group, Prisma, User } from '@prisma/client';
 import { PrismaService } from 'nestjs-prisma';
 import { UpdateUsersStatusesDto } from './dto/update-user-statuses.dto';
 
@@ -17,6 +17,7 @@ export class UsersRepository {
     return this.prisma.user.findMany({
       include: {
         status: true,
+        group: true,
       },
     });
   }
@@ -34,6 +35,37 @@ export class UsersRepository {
       skip,
       take,
       where,
+    });
+  }
+
+  async getUserGroupId(userId: User['id']): Promise<Group['id'] | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { groupId: true },
+    });
+    return user?.groupId;
+  }
+
+  async addUserToGroup(
+    userId: User['id'],
+    groupId: Group['id'],
+  ): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { groupId: groupId },
+    });
+  }
+
+  async removeUserFromGroup(userId: User['id']): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { groupId: null },
+    });
+  }
+
+  async countUsersInGroup(groupId: Group['id']): Promise<number> {
+    return this.prisma.user.count({
+      where: { groupId: groupId },
     });
   }
 
@@ -92,7 +124,7 @@ export class UsersRepository {
 
     if (failedBatches.length > 0) {
       console.error(
-        `Some batches still failed after ${retryLimit} retry:`,
+        `Some batches still failed after ${retryLimit} retries:`,
         failedBatches,
       );
       throw new Error('Failed to update some user statuses after retries');

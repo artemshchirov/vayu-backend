@@ -1,26 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
-import { UpdateGroupDto } from './dto/update-group.dto';
+import { GroupsRepository } from './groups.repository';
+import { GroupEntity } from './entities/group.entity';
 
 @Injectable()
 export class GroupsService {
-  create(createGroupDto: CreateGroupDto) {
-    return 'This action adds a new group';
+  constructor(private readonly groupsRepository: GroupsRepository) {}
+
+  async createGroup(createGroupDto: CreateGroupDto) {
+    return this.groupsRepository.createGroup(createGroupDto);
   }
 
-  findAll() {
-    return `This action returns all groups`;
+  async isGroupEmpty(groupId: number): Promise<boolean> {
+    const userCount = await this.groupsRepository.countGroupUsers(groupId);
+    return userCount === 0;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} group`;
+  async updateGroupStatus(
+    groupId: number,
+    status: 'EMPTY' | 'NOT_EMPTY',
+  ): Promise<void> {
+    await this.groupsRepository.updateGroupStatus(groupId, status);
   }
 
-  update(id: number, updateGroupDto: UpdateGroupDto) {
-    return `This action updates a #${id} group`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} group`;
+  async findAll() {
+    const groups = await this.groupsRepository.findAll();
+    return groups.map((group) => new GroupEntity(group));
   }
 }

@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { GroupStatus } from '@prisma/client';
+import { GroupStatus, User } from '@prisma/client';
+import { UserEntity } from '../../users/entities/user.entity';
+import { Type } from 'class-transformer';
 
 export class GroupEntity {
   constructor(partial: Partial<GroupEntity>) {
@@ -14,6 +16,13 @@ export class GroupEntity {
 
   @ApiProperty({ example: GroupStatus.NOT_EMPTY, enum: GroupStatus })
   status: GroupStatus;
+
+  @ApiProperty({
+    type: () => [UserEntity],
+    description: 'List of users in the group',
+  })
+  @Type(() => UserEntity)
+  users: User[];
 
   @ApiProperty({ example: '2022-10-21T14:48:00.000Z' })
   createdAt: Date;
