@@ -69,6 +69,22 @@ export class UsersRepository {
     });
   }
 
+  /**
+   * Updates user statuses in the database in batches with retries.
+   *
+   * @param {UpdateUserStatusDto['updates']} updates - Array of objects containing user ID and new status.
+   * @returns {Promise<void>} Promise that resolves after all statuses are updated.
+   * @throws {Error} Throws an error if some user statuses fail to update after multiple retries.
+   *
+   * This method splits the updates array into batches and processes them sequentially.
+   * If a batch update fails, the method retries up to the specified retry limit.
+   * After the specified retryLimit of unsuccessful attempts, the function throws an error.
+   *
+   * Advantages:
+   * - Efficiently handles large data sets by processing updates in manageable batches.
+   * - Ensures data integrity with transactions during batch updates.
+   * - Improves reliability with retry logic for handling transient failures.
+   */
   async updateStatuses(
     updates: UpdateUsersStatusesDto['updates'],
   ): Promise<void> {
